@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f9fa">
+  <title>拾记 · 把灵感留在身边</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f8f9fa;
+      --surface: #fff;
+      --surface-soft: #f1f3f4;
+      --text: #202124;
+      --muted: #5f6368;
+      --line: #e0e3e7;
+      --accent: #fbbc04;
+      --shadow: 0 2px 8px rgba(60, 64, 67, .12);
+      --shadow-hover: 0 5px 16px rgba(60, 64, 67, .18);
+      --note-default: #fff;
+      --note-red: #fce8e6;
+      --note-orange: #fef0e1;
+      --note-yellow: #fff7cc;
+      --note-green: #e6f4ea;
+      --note-teal: #e0f2f1;
+      --note-blue: #e8f0fe;
+      --note-purple: #f3e8fd;
+      --note-pink: #fce8f3;
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #202124;
+      --surface: #292a2d;
+      --surface-soft: #35363a;
+      --text: #e8eaed;
+      --muted: #bdc1c6;
+      --line: #484a4e;
+      --accent: #fdd663;
+      --shadow: 0 2px 8px rgba(0, 0, 0, .22);
+      --shadow-hover: 0 5px 16px rgba(0, 0, 0, .32);
+      --note-default: #292a2d;
+      --note-red: #5c3332;
+      --note-orange: #60452f;
+      --note-yellow: #5b5129;
+      --note-green: #334b3b;
+      --note-teal: #304d4b;
+      --note-blue: #34445f;
+      --note-purple: #4a3b59;
+      --note-pink: #593c4c;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background: var(--page);
+      color: var(--text);
+      font: 14px/1.5 "Google Sans", "Segoe UI", "Microsoft YaHei", sans-serif;
+      transition: background .2s ease, color .2s ease;
+    }
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 2px solid #4285f4;
+      outline-offset: 2px;
+    }
+    .app-shell { min-height: 100vh; }
+    .topbar {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 205px;
+      white-space: nowrap;
+    }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      color: #242424;
+      background: var(--accent);
+    }
+    .brand-name { font-size: 19px; font-weight: 600; letter-spacing: -.4px; }
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: min(680px, 100%);
+      height: 48px;
+      padding: 0 16px;
+      margin: 0 auto;
+      color: var(--muted);
+      background: var(--surface-soft);
+      border: 1px solid transparent;
+      border-radius: 12px;
+      transition: box-shadow .18s ease, background .18s ease;
+    }
+    .search-wrap:focus-within { background: var(--surface); border-color: var(--line); box-shadow: var(--shadow); }
+    .search-wrap input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: transparent;
+      font-size: 15px;
+    }
+    .search-wrap input::placeholder { color: var(--muted); }
+    .icon-button, .icon-action {
+      display: grid;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: background .18s ease, color .18s ease, transform .18s ease;
+    }
+    .icon-button { width: 42px; height: 42px; }
+    .icon-button:hover, .icon-action:hover { color: var(--text); background: var(--surface-soft); }
+    .icon-button:active, .icon-action:active { transform: scale(.94); }
+    .main { max-width: 1500px; margin: 0 auto; padding: 34px 40px 72px; }
+    .composer {
+      width: min(600px, 100%);
+      margin: 0 auto 43px;
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      transition: box-shadow .2s ease, border-color .2s ease;
+    }
+    .composer:focus-within { box-shadow: var(--shadow-hover); }
+    .composer input, .composer textarea {
+      display: block;
+      width: 100%;
+      padding: 15px 17px;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: transparent;
+      resize: vertical;
+    }
+    .composer input { padding-bottom: 7px; font-weight: 600; }
+    .composer textarea { min-height: 56px; max-height: 220px; padding-top: 7px; }
+    .composer input::placeholder, .composer textarea::placeholder { color: var(--muted); }
+    .composer-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 10px 9px 14px;
+    }
+    .composer-hint { color: var(--muted); font-size: 12px; }
+    .primary-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 38px;
+      padding: 0 17px;
+      border: 0;
+      border-radius: 9px;
+      color: #252525;
+      background: var(--accent);
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter .16s ease, transform .16s ease;
+    }
+    .primary-button:hover { filter: brightness(1.05); }
+    .primary-button:active { transform: scale(.97); }
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 17px 3px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.15px;
+      text-transform: uppercase;
+    }
+    .section-heading:not(:first-child) { margin-top: 37px; }
+    .notes-grid {
+      columns: 250px;
+      column-gap: 17px;
+    }
+    .note-card {
+      position: relative;
+      display: inline-flex;
+      flex-direction: column;
+      width: 100%;
+      min-height: 94px;
+      margin: 0 0 17px;
+      padding: 17px 17px 10px;
+      overflow: visible;
+      break-inside: avoid;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--note-background, var(--note-default));
+      cursor: grab;
+      transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease, opacity .18s ease;
+    }
+    .note-card:hover { box-shadow: var(--shadow-hover); }
+    .note-card.dragging { opacity: .4; transform: scale(.98); }
+    .note-card.drop-target { border-color: #4285f4; }
+    .note-title { margin: 0 24px 8px 0; font-size: 16px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+    .note-body { margin: 0; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+    .note-body:empty { display: none; }
+    .note-date { margin-top: 13px; color: var(--muted); font-size: 11px; }
+    .pin-indicator { position: absolute; top: 11px; right: 12px; color: var(--muted); }
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      height: 34px;
+      margin: 8px -8px -5px;
+      opacity: 0;
+      transition: opacity .16s ease;
+    }
+    .note-card:hover .card-actions, .note-card:focus-within .card-actions { opacity: 1; }
+    .icon-action { width: 34px; height: 34px; }
+    .icon-action svg { width: 17px; height: 17px; }
+    .icon-action.is-pinned { color: #b77900; }
+    .delete-action:hover { color: #d93025; }
+    .empty-state {
+      display: grid;
+      justify-items: center;
+      padding: 56px 16px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .empty-illustration {
+      display: grid;
+      place-items: center;
+      width: 98px;
+      height: 98px;
+      margin-bottom: 18px;
+      border: 2px dashed var(--line);
+      border-radius: 50%;
+      color: var(--muted);
+    }
+    .empty-state strong { margin-bottom: 5px; color: var(--text); font-size: 17px; font-weight: 500; }
+    .empty-state p { margin: 0; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      min-height: 48px;
+      padding: 0 14px 0 18px;
+      color: #fff;
+      background: #323232;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, .22);
+      transform: translate(-50%, 18px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .toast.visible { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+    .toast button { border: 0; color: #fdd663; background: transparent; font-weight: 700; cursor: pointer; }
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(32, 33, 36, .42);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .18s ease, visibility .18s ease;
+    }
+    .dialog-backdrop.open { opacity: 1; visibility: visible; }
+    .editor {
+      width: min(560px, 100%);
+      max-height: min(85vh, 720px);
+      overflow: auto;
+      padding: 19px 19px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--note-background, var(--surface));
+      box-shadow: 0 16px 48px rgba(0, 0, 0, .24);
+      transform: translateY(9px) scale(.99);
+      transition: transform .18s ease;
+    }
+    .dialog-backdrop.open .editor { transform: translateY(0) scale(1); }
+    .editor input, .editor textarea {
+      display: block;
+      width: 100%;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: transparent;
+      resize: vertical;
+    }
+    .editor input { padding: 3px 1px 11px; font-size: 18px; font-weight: 600; }
+    .editor textarea { min-height: 150px; line-height: 1.65; }
+    .editor-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; }
+    .editor-tools { display: flex; align-items: center; gap: 4px; }
+    .editor-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+    .color-picker { display: flex; align-items: center; gap: 9px; }
+    .color-choice {
+      width: 23px;
+      height: 23px;
+      padding: 0;
+      border: 2px solid transparent;
+      border-radius: 50%;
+      background: var(--swatch);
+      cursor: pointer;
+    }
+    .color-choice.selected { border-color: #4285f4; box-shadow: 0 0 0 1px var(--surface); }
+    .color-choice[data-color="default"] { border-color: var(--line); }
+    .color-choice[data-color="default"].selected { border-color: #4285f4; }
+    .archive-heading { margin-top: 37px; }
+    .restore-action:hover { color: #188038; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 700px) {
+      .topbar { height: 64px; gap: 9px; padding: 0 13px; }
+      .brand { min-width: 0; gap: 8px; }
+      .brand-mark { width: 34px; height: 34px; }
+      .brand-name { font-size: 17px; }
+      .search-wrap { height: 42px; gap: 7px; padding: 0 10px; }
+      .search-wrap input { min-width: 0; font-size: 14px; }
+      .topbar > .icon-button { width: 37px; height: 37px; }
+      .main { padding: 26px 17px 50px; }
+      .composer { margin-bottom: 34px; }
+      .notes-grid { columns: 220px; column-gap: 12px; }
+      .note-card { margin-bottom: 12px; }
+      .card-actions { opacity: 1; }
+    }
+    @media (max-width: 430px) {
+      .brand-name { display: none; }
+      .brand { flex: 0 0 auto; }
+      .topbar { gap: 8px; }
+      .search-wrap { margin-left: 0; }
+      .main { padding-right: 13px; padding-left: 13px; }
+      .notes-grid { columns: 1; }
+      .note-card { margin-bottom: 12px; }
+      .composer-hint { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" class="sr-only" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M7 3.75h8.5L20 8.3v11.95H7a3 3 0 0 1-3-3v-10.5a3 3 0 0 1 3-3Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M15 4v5h5M8 13h8M8 16.5h8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.8" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 2.5v2m0 15v2m9.5-9.5h-2m-15 0h-2m16.2-6.7-1.4 1.4M6.7 17.3l-1.4 1.4m13.4 0-1.4-1.4M6.7 6.7 5.3 5.3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.2 15.1A8.3 8.3 0 0 1 8.9 4.8 8.5 8.5 0 1 0 19.2 15.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="m16 3 5 5-3 1-3.5 3.5.5 4.5-2 2-3-5-5-3 2-2 4.5.5L15 6l1-3Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m10 14-6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24"><path d="M4 7h16v13H4zM3 4h18v3H3zM9 11h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v5m4-5v5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-restore" viewBox="0 0 24 24"><path d="M4 11a8 8 0 1 1 2.3 6M4 5v6h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Zm7 14 .8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand" aria-label="拾记首页">
+        <div class="brand-mark"><svg width="23" height="23"><use href="#i-note"></use></svg></div>
+        <span class="brand-name">拾记</span>
+      </div>
+      <label class="search-wrap">
+        <svg width="21" height="21"><use href="#i-search"></use></svg>
+        <span class="sr-only">搜索笔记</span>
+        <input id="search-input" type="search" placeholder="搜索你的笔记" autocomplete="off">
+        <button id="clear-search" class="icon-button" type="button" aria-label="清除搜索" hidden><svg width="18" height="18"><use href="#i-close"></use></svg></button>
+      </label>
+      <button id="theme-toggle" class="icon-button" type="button" aria-label="切换明暗主题" title="切换明暗主题"><svg width="21" height="21"><use href="#i-moon"></use></svg></button>
+    </header>
+
+    <main class="main">
+      <form class="composer" id="create-form">
+        <label class="sr-only" for="new-title">笔记标题</label>
+        <input id="new-title" type="text" maxlength="160" placeholder="标题" autocomplete="off">
+        <label class="sr-only" for="new-body">笔记内容</label>
+        <textarea id="new-body" rows="2" maxlength="12000" placeholder="记下此刻的灵感…"></textarea>
+        <div class="composer-actions">
+          <span class="composer-hint">灵感无需等待，随时记录</span>
+          <button class="primary-button" type="submit"><svg width="17" height="17"><use href="#i-check"></use></svg>保存笔记</button>
+        </div>
+      </form>
+
+      <section id="pinned-section" hidden>
+        <h2 class="section-heading"><svg width="15" height="15"><use href="#i-pin"></use></svg>已置顶</h2>
+        <div id="pinned-notes" class="notes-grid"></div>
+      </section>
+      <section id="notes-section">
+        <h2 id="notes-heading" class="section-heading"><svg width="15" height="15"><use href="#i-note"></use></svg><span>其他笔记</span></h2>
+        <div id="notes" class="notes-grid"></div>
+      </section>
+      <section id="archive-section" hidden>
+        <h2 class="section-heading archive-heading"><svg width="15" height="15"><use href="#i-archive"></use></svg>已归档</h2>
+        <div id="archived-notes" class="notes-grid"></div>
+      </section>
+      <div id="empty-state" class="empty-state" hidden>
+        <div class="empty-illustration"><svg width="44" height="44"><use href="#i-spark"></use></svg></div>
+        <strong id="empty-title">灵感还在路上</strong>
+        <p id="empty-description">写下第一条笔记，让想法有迹可循。</p>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <span id="toast-message"></span>
+    <button id="undo-button" type="button" hidden>撤销</button>
+  </div>
+
+  <div id="dialog-backdrop" class="dialog-backdrop" aria-hidden="true">
+    <form id="edit-form" class="editor" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+      <label class="sr-only" for="edit-title">笔记标题</label>
+      <input id="edit-title" type="text" maxlength="160" placeholder="标题" autocomplete="off">
+      <label class="sr-only" for="edit-body">笔记内容</label>
+      <textarea id="edit-body" maxlength="12000" placeholder="记下此刻的灵感…"></textarea>
+      <div class="editor-toolbar">
+        <div id="color-picker" class="color-picker" aria-label="笔记颜色"></div>
+        <div class="editor-tools">
+          <button id="edit-pin" class="icon-action" type="button" aria-label="置顶笔记" title="置顶"><svg><use href="#i-pin"></use></svg></button>
+          <button id="edit-archive" class="icon-action" type="button" aria-label="归档笔记" title="归档"><svg><use href="#i-archive"></use></svg></button>
+          <button id="edit-delete" class="icon-action delete-action" type="button" aria-label="删除笔记" title="删除"><svg><use href="#i-trash"></use></svg></button>
+        </div>
+      </div>
+      <div class="editor-footer">
+        <span id="edit-date" class="note-date"></span>
+        <button class="primary-button" type="submit">完成</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+      const STORAGE_KEY = "shiji-notes-v1";
+      const THEME_KEY = "shiji-theme-v1";
+      const COLORS = ["default", "red", "orange", "yellow", "green", "teal", "blue", "purple", "pink"];
+      const COLOR_NAMES = {
+        default: "默认色", red: "红色", orange: "橙色", yellow: "黄色",
+        green: "绿色", teal: "青绿色", blue: "蓝色", purple: "紫色", pink: "粉色"
+      };
+      const COLOR_SWATCHES = {
+        default: "var(--note-default)", red: "var(--note-red)", orange: "var(--note-orange)",
+        yellow: "var(--note-yellow)", green: "var(--note-green)", teal: "var(--note-teal)",
+        blue: "var(--note-blue)", purple: "var(--note-purple)", pink: "var(--note-pink)"
+      };
+      const $ = (selector) => document.querySelector(selector);
+      const titleInput = $("#new-title");
+      const bodyInput = $("#new-body");
+      const searchInput = $("#search-input");
+      const clearSearch = $("#clear-search");
+      const pinnedSection = $("#pinned-section");
+      const pinnedContainer = $("#pinned-notes");
+      const notesSection = $("#notes-section");
+      const notesHeading = $("#notes-heading span");
+      const notesContainer = $("#notes");
+      const archiveSection = $("#archive-section");
+      const archivedContainer = $("#archived-notes");
+      const emptyState = $("#empty-state");
+      const dialogBackdrop = $("#dialog-backdrop");
+      const editor = $("#edit-form");
+      const editTitle = $("#edit-title");
+      const editBody = $("#edit-body");
+      const editDate = $("#edit-date");
+      const colorPicker = $("#color-picker");
+      const themeButton = $("#theme-toggle");
+      const toast = $("#toast");
+      const toastMessage = $("#toast-message");
+      const undoButton = $("#undo-button");
+      let notes = loadNotes();
+      let activeNoteId = null;
+      let editorColor = "default";
+      let editorPinned = false;
+      let pendingDeletion = null;
+      let toastTimer = 0;
+      let dragNoteId = null;
+      let searchTerm = "";
+
+      function loadNotes() {
+        try {
+          const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+          if (!Array.isArray(stored)) return [];
+          return stored.filter((note) => note && typeof note.id === "string")
+            .map((note) => ({
+              id: note.id,
+              title: typeof note.title === "string" ? note.title : "",
+              body: typeof note.body === "string" ? note.body : "",
+              color: COLORS.includes(note.color) ? note.color : "default",
+              pinned: note.pinned === true,
+              archived: note.archived === true,
+              createdAt: Number.isFinite(note.createdAt) ? note.createdAt : Date.now(),
+              updatedAt: Number.isFinite(note.updatedAt) ? note.updatedAt : Date.now(),
+              order: Number.isFinite(note.order) ? note.order : 0
+            }))
+            .sort((a, b) => a.order - b.order);
+        } catch (error) {
+          console.error("无法读取本地笔记：", error);
+          return [];
+        }
+      }
+
+      function saveNotes() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+        } catch (error) {
+          console.error("无法保存笔记到浏览器本地存储：", error);
+          showToast("保存失败：浏览器存储空间可能已满");
+        }
+      }
+
+      function makeId() {
+        return globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
+          ? globalThis.crypto.randomUUID()
+          : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+      }
+
+      function noteColor(note) {
+        return COLOR_SWATCHES[note.color] || COLOR_SWATCHES.default;
+      }
+
+      function formatDate(timestamp) {
+        return new Intl.DateTimeFormat("zh-CN", {
+          month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+        }).format(new Date(timestamp));
+      }
+
+      function createIcon(name, size = 17) {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", String(size));
+        svg.setAttribute("height", String(size));
+        const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+        use.setAttribute("href", `#i-${name}`);
+        svg.append(use);
+        return svg;
+      }
+
+      function makeAction(label, icon, className, handler) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `icon-action ${className || ""}`.trim();
+        button.setAttribute("aria-label", label);
+        button.title = label;
+        button.append(createIcon(icon));
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          handler();
+        });
+        return button;
+      }
+
+      function createCard(note, isArchived = false) {
+        const card = document.createElement("article");
+        card.className = "note-card";
+        card.dataset.id = note.id;
+        card.style.setProperty("--note-background", noteColor(note));
+        card.draggable = !isArchived && !searchTerm;
+        card.tabIndex = 0;
+        card.setAttribute("aria-label", `${note.title || "未命名笔记"}，双击编辑`);
+        if (note.pinned && !isArchived) {
+          const pin = document.createElement("span");
+          pin.className = "pin-indicator";
+          pin.title = "已置顶";
+          pin.append(createIcon("pin", 17));
+          card.append(pin);
+        }
+        if (note.title) {
+          const title = document.createElement("h3");
+          title.className = "note-title";
+          title.textContent = note.title;
+          card.append(title);
+        }
+        const body = document.createElement("p");
+        body.className = "note-body";
+        body.textContent = note.body;
+        card.append(body);
+        const date = document.createElement("time");
+        date.className = "note-date";
+        date.dateTime = new Date(note.updatedAt).toISOString();
+        date.textContent = formatDate(note.updatedAt);
+        card.append(date);
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        if (isArchived) {
+          actions.append(makeAction("取消归档", "restore", "restore-action", () => toggleArchive(note.id)));
+        } else {
+          actions.append(makeAction(note.pinned ? "取消置顶" : "置顶", "pin", note.pinned ? "is-pinned" : "", () => togglePin(note.id)));
+          actions.append(makeAction("归档", "archive", "", () => toggleArchive(note.id)));
+        }
+        actions.append(makeAction("删除", "trash", "delete-action", () => deleteNote(note.id)));
+        card.append(actions);
+        card.addEventListener("click", (event) => {
+          if (!event.target.closest("button")) openEditor(note.id);
+        });
+        card.addEventListener("keydown", (event) => {
+          if ((event.key === "Enter" || event.key === " ") && !event.target.closest("button")) {
+            event.preventDefault();
+            openEditor(note.id);
+          }
+        });
+        if (!isArchived) {
+          card.addEventListener("dragstart", (event) => {
+            dragNoteId = note.id;
+            card.classList.add("dragging");
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", note.id);
+          });
+          card.addEventListener("dragend", () => {
+            dragNoteId = null;
+            card.classList.remove("dragging");
+            document.querySelectorAll(".drop-target").forEach((item) => item.classList.remove("drop-target"));
+          });
+          card.addEventListener("dragover", (event) => {
+            if (!dragNoteId || dragNoteId === note.id) return;
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "move";
+            card.classList.add("drop-target");
+          });
+          card.addEventListener("dragleave", () => card.classList.remove("drop-target"));
+          card.addEventListener("drop", (event) => {
+            event.preventDefault();
+            card.classList.remove("drop-target");
+            reorderNotes(dragNoteId || event.dataTransfer.getData("text/plain"), note.id);
+          });
+        }
+        return card;
+      }
+
+      function render() {
+        const query = searchTerm.trim().toLocaleLowerCase("zh-CN");
+        const matches = (note) => !query || `${note.title}\n${note.body}`.toLocaleLowerCase("zh-CN").includes(query);
+        const active = notes.filter((note) => !note.archived && matches(note));
+        const pinned = active.filter((note) => note.pinned);
+        const regular = active.filter((note) => !note.pinned);
+        const archived = notes.filter((note) => note.archived && matches(note));
+        pinnedContainer.replaceChildren(...pinned.map((note) => createCard(note)));
+        notesContainer.replaceChildren(...regular.map((note) => createCard(note)));
+        archivedContainer.replaceChildren(...archived.map((note) => createCard(note, true)));
+        pinnedSection.hidden = pinned.length === 0;
+        notesSection.hidden = regular.length === 0;
+        archiveSection.hidden = archived.length === 0;
+        clearSearch.hidden = !searchInput.value;
+        notesHeading.textContent = query ? "搜索结果" : "其他笔记";
+        const anyResults = pinned.length + regular.length + archived.length > 0;
+        emptyState.hidden = anyResults;
+        if (!anyResults) {
+          $("#empty-title").textContent = query ? "没有找到匹配的笔记" : "灵感还在路上";
+          $("#empty-description").textContent = query ? "试试其他关键词，或清除搜索条件。" : "写下第一条笔记，让想法有迹可循。";
+          notesSection.hidden = true;
+        }
+      }
+
+      function reorderNotes(sourceId, targetId) {
+        if (!sourceId || sourceId === targetId) return;
+        const source = notes.find((note) => note.id === sourceId);
+        const target = notes.find((note) => note.id === targetId);
+        if (!source || !target || source.archived || target.archived) return;
+        const ordered = notes.filter((note) => !note.archived);
+        const archived = notes.filter((note) => note.archived);
+        const from = ordered.findIndex((note) => note.id === sourceId);
+        const to = ordered.findIndex((note) => note.id === targetId);
+        ordered.splice(to, 0, ordered.splice(from, 1)[0]);
+        let index = 0;
+        ordered.forEach((note) => { note.order = index++; });
+        archived.forEach((note) => { note.order = index++; });
+        notes = [...ordered, ...archived];
+        saveNotes();
+        render();
+      }
+
+      function addNote(title, body) {
+        const cleanTitle = title.trim();
+        const cleanBody = body.trim();
+        if (!cleanTitle && !cleanBody) {
+          showToast("先写点什么再保存吧");
+          return false;
+        }
+        const timestamp = Date.now();
+        notes.unshift({
+          id: makeId(), title: cleanTitle, body: cleanBody, color: "default",
+          pinned: false, archived: false, createdAt: timestamp, updatedAt: timestamp,
+          order: Math.min(0, ...notes.map((note) => note.order)) - 1
+        });
+        saveNotes();
+        render();
+        return true;
+      }
+
+      function togglePin(id) {
+        const note = notes.find((item) => item.id === id);
+        if (!note) return;
+        note.pinned = !note.pinned;
+        note.updatedAt = Date.now();
+        saveNotes();
+        render();
+        if (activeNoteId === id) updateEditorControls(note);
+        showToast(note.pinned ? "笔记已置顶" : "已取消置顶");
+      }
+
+      function toggleArchive(id) {
+        const note = notes.find((item) => item.id === id);
+        if (!note) return;
+        note.archived = !note.archived;
+        note.pinned = note.archived ? false : note.pinned;
+        note.updatedAt = Date.now();
+        saveNotes();
+        closeEditor();
+        render();
+        showToast(note.archived ? "笔记已归档" : "笔记已取消归档");
+      }
+
+      function deleteNote(id) {
+        const index = notes.findIndex((note) => note.id === id);
+        if (index < 0) return;
+        const [deleted] = notes.splice(index, 1);
+        pendingDeletion = { note: deleted, index };
+        saveNotes();
+        closeEditor();
+        render();
+        showToast("笔记已删除", true);
+      }
+
+      function undoDelete() {
+        if (!pendingDeletion) return;
+        notes.splice(Math.min(pendingDeletion.index, notes.length), 0, pendingDeletion.note);
+        pendingDeletion = null;
+        saveNotes();
+        render();
+        hideToast();
+      }
+
+      function showToast(message, canUndo = false) {
+        window.clearTimeout(toastTimer);
+        toastMessage.textContent = message;
+        undoButton.hidden = !canUndo;
+        toast.classList.add("visible");
+        toastTimer = window.setTimeout(() => {
+          pendingDeletion = null;
+          hideToast();
+        }, canUndo ? 5500 : 2400);
+      }
+
+      function hideToast() {
+        toast.classList.remove("visible");
+        window.clearTimeout(toastTimer);
+      }
+
+      function updateEditorControls(note) {
+        editorPinned = note ? note.pinned : editorPinned;
+        $("#edit-pin").classList.toggle("is-pinned", editorPinned);
+        $("#edit-pin").setAttribute("aria-label", editorPinned ? "取消置顶" : "置顶笔记");
+        $("#edit-pin").title = editorPinned ? "取消置顶" : "置顶";
+        $("#edit-archive").setAttribute("aria-label", note && note.archived ? "取消归档" : "归档笔记");
+      }
+
+      function openEditor(id) {
+        const note = notes.find((item) => item.id === id);
+        if (!note) return;
+        activeNoteId = id;
+        editorColor = note.color;
+        editorPinned = note.pinned;
+        editTitle.value = note.title;
+        editBody.value = note.body;
+        editDate.textContent = `更新于 ${formatDate(note.updatedAt)}`;
+        editor.style.setProperty("--note-background", noteColor(note));
+        drawColorPicker();
+        updateEditorControls(note);
+        dialogBackdrop.classList.add("open");
+        dialogBackdrop.setAttribute("aria-hidden", "false");
+        window.setTimeout(() => editTitle.focus(), 30);
+      }
+
+      function closeEditor() {
+        if (!dialogBackdrop.classList.contains("open")) return;
+        dialogBackdrop.classList.remove("open");
+        dialogBackdrop.setAttribute("aria-hidden", "true");
+        activeNoteId = null;
+      }
+
+      function drawColorPicker() {
+        colorPicker.replaceChildren();
+        COLORS.forEach((color) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `color-choice${editorColor === color ? " selected" : ""}`;
+          button.dataset.color = color;
+          button.style.setProperty("--swatch", COLOR_SWATCHES[color]);
+          button.setAttribute("aria-label", COLOR_NAMES[color]);
+          button.title = COLOR_NAMES[color];
+          button.setAttribute("aria-pressed", String(editorColor === color));
+          button.addEventListener("click", () => {
+            editorColor = color;
+            editor.style.setProperty("--note-background", COLOR_SWATCHES[color]);
+            drawColorPicker();
+          });
+          colorPicker.append(button);
+        });
+      }
+
+      function applyTheme(theme) {
+        const dark = theme === "dark";
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        themeButton.replaceChildren(createIcon(dark ? "sun" : "moon", 21));
+        themeButton.title = dark ? "切换到浅色主题" : "切换到深色主题";
+        themeButton.setAttribute("aria-label", themeButton.title);
+        document.querySelector('meta[name="theme-color"]').content = dark ? "#202124" : "#f8f9fa";
+      }
+
+      $("#create-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (!addNote(titleInput.value, bodyInput.value)) return;
+        titleInput.value = "";
+        bodyInput.value = "";
+        showToast("笔记已保存");
+      });
+      searchInput.addEventListener("input", () => {
+        searchTerm = searchInput.value;
+        render();
+      });
+      clearSearch.addEventListener("click", () => {
+        searchInput.value = "";
+        searchTerm = "";
+        render();
+        searchInput.focus();
+      });
+      $("#undo-button").addEventListener("click", undoDelete);
+      $("#edit-pin").addEventListener("click", () => {
+        if (activeNoteId) togglePin(activeNoteId);
+      });
+      $("#edit-archive").addEventListener("click", () => {
+        if (activeNoteId) toggleArchive(activeNoteId);
+      });
+      $("#edit-delete").addEventListener("click", () => {
+        if (activeNoteId) deleteNote(activeNoteId);
+      });
+      editor.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const note = notes.find((item) => item.id === activeNoteId);
+        if (!note) return;
+        const title = editTitle.value.trim();
+        const body = editBody.value.trim();
+        if (!title && !body) {
+          deleteNote(note.id);
+          return;
+        }
+        note.title = title;
+        note.body = body;
+        note.color = editorColor;
+        note.pinned = editorPinned;
+        note.updatedAt = Date.now();
+        saveNotes();
+        closeEditor();
+        render();
+      });
+      dialogBackdrop.addEventListener("click", (event) => {
+        if (event.target === dialogBackdrop) closeEditor();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && dialogBackdrop.classList.contains("open")) closeEditor();
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "enter" && dialogBackdrop.classList.contains("open")) {
+          editor.requestSubmit();
+        }
+      });
+      themeButton.addEventListener("click", () => {
+        const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        applyTheme(nextTheme);
+        try {
+          localStorage.setItem(THEME_KEY, nextTheme);
+        } catch (error) {
+          console.error("无法保存主题设置：", error);
+        }
+      });
+
+      let savedTheme = "light";
+      try {
+        savedTheme = localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+      } catch (error) {
+        console.error("无法读取主题设置：", error);
+      }
+      applyTheme(savedTheme);
+      render();
+    })();
+  </script>
+</body>
+</html>
