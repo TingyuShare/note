@@ -411,7 +411,7 @@
         <label class="sr-only" for="new-body">笔记内容</label>
         <textarea id="new-body" rows="2" maxlength="12000" placeholder="记下此刻的灵感…"></textarea>
         <div class="composer-actions">
-          <span class="composer-hint">灵感无需等待，随时记录</span>
+          <span class="composer-hint">草稿会自动保存，点击后加入笔记</span>
           <button class="primary-button" type="submit"><svg width="17" height="17"><use href="#i-check"></use></svg>保存笔记</button>
         </div>
       </form>
@@ -466,6 +466,7 @@
     (() => {
       "use strict";
       const STORAGE_KEY = "shiji-notes-v1";
+      const DRAFT_KEY = "shiji-note-draft-v1";
       const THEME_KEY = "shiji-theme-v1";
       const COLORS = ["default", "red", "orange", "yellow", "green", "teal", "blue", "purple", "pink"];
       const COLOR_NAMES = {
@@ -508,6 +509,8 @@
       let toastTimer = 0;
       let dragNoteId = null;
       let searchTerm = "";
+      let composerDraftTimer = 0;
+      let editorSaveTimer = 0;
 
       function loadNotes() {
         try {
@@ -539,6 +542,60 @@
           console.error("无法保存笔记到浏览器本地存储：", error);
           showToast("保存失败：浏览器存储空间可能已满");
         }
+      }
+
+      function loadComposerDraft() {
+        try {
+          const stored = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
+          if (!stored || typeof stored !== "object") return null;
+          return {
+            title: typeof stored.title === "string" ? stored.title : "",
+            body: typeof stored.body === "string" ? stored.body : ""
+          };
+        } catch (error) {
+          console.error("无法读取自动保存的草稿：", error);
+          showToast("草稿读取失败");
+          return null;
+        }
+      }
+
+      function saveComposerDraft() {
+        window.clearTimeout(composerDraftTimer);
+        composerDraftTimer = 0;
+        if (!titleInput.value && !bodyInput.value) {
+          try {
+            localStorage.removeItem(DRAFT_KEY);
+          } catch (error) {
+            console.error("无法清除已保存的草稿：", error);
+            showToast("草稿清除失败");
+          }
+          return;
+        }
+        try {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({
+            title: titleInput.value,
+            body: bodyInput.value
+          }));
+        } catch (error) {
+          console.error("无法自动保存草稿：", error);
+          showToast("草稿自动保存失败：浏览器存储空间可能已满");
+        }
+      }
+
+      function clearComposerDraft() {
+        window.clearTimeout(composerDraftTimer);
+        composerDraftTimer = 0;
+        try {
+          localStorage.removeItem(DRAFT_KEY);
+        } catch (error) {
+          console.error("无法清除已保存的草稿：", error);
+          showToast("草稿清除失败，刷新后可能会再次显示");
+        }
+      }
+
+      function scheduleComposerDraftSave() {
+        window.clearTimeout(composerDraftTimer);
+        composerDraftTimer = window.setTimeout(saveComposerDraft, 300);
       }
 
       function makeId() {
@@ -736,6 +793,7 @@
         note.pinned = note.archived ? false : note.pinned;
         note.updatedAt = Date.now();
         saveNotes();
+        if (activeNoteId === id) updateEditorControls(note);
         closeEditor();
         render();
         showToast(note.archived ? "笔记已归档" : "笔记已取消归档");
@@ -788,6 +846,7 @@
       function openEditor(id) {
         const note = notes.find((item) => item.id === id);
         if (!note) return;
+        flushEditorSave();
         activeNoteId = id;
         editorColor = note.color;
         editorPinned = note.pinned;
@@ -804,9 +863,40 @@
 
       function closeEditor() {
         if (!dialogBackdrop.classList.contains("open")) return;
+        flushEditorSave();
         dialogBackdrop.classList.remove("open");
         dialogBackdrop.setAttribute("aria-hidden", "true");
         activeNoteId = null;
+      }
+
+      function saveEditorChanges(finalize = false) {
+        const note = notes.find((item) => item.id === activeNoteId);
+        if (!note) return;
+        const title = finalize ? editTitle.value.trim() : editTitle.value;
+        const body = finalize ? editBody.value.trim() : editBody.value;
+        if (note.title === title && note.body === body && note.color === editorColor && note.pinned === editorPinned) {
+          editDate.textContent = `更新于 ${formatDate(note.updatedAt)}`;
+          return;
+        }
+        note.title = title;
+        note.body = body;
+        note.color = editorColor;
+        note.pinned = editorPinned;
+        note.updatedAt = Date.now();
+        saveNotes();
+        editDate.textContent = `更新于 ${formatDate(note.updatedAt)}`;
+      }
+
+      function flushEditorSave(finalize = false) {
+        window.clearTimeout(editorSaveTimer);
+        editorSaveTimer = 0;
+        saveEditorChanges(finalize);
+      }
+
+      function scheduleEditorSave() {
+        window.clearTimeout(editorSaveTimer);
+        editDate.textContent = "正在自动保存…";
+        editorSaveTimer = window.setTimeout(() => flushEditorSave(), 300);
       }
 
       function drawColorPicker() {
@@ -824,6 +914,7 @@
             editorColor = color;
             editor.style.setProperty("--note-background", COLOR_SWATCHES[color]);
             drawColorPicker();
+            scheduleEditorSave();
           });
           colorPicker.append(button);
         });
@@ -843,8 +934,10 @@
         if (!addNote(titleInput.value, bodyInput.value)) return;
         titleInput.value = "";
         bodyInput.value = "";
+        clearComposerDraft();
         showToast("笔记已保存");
       });
+      $("#create-form").addEventListener("input", scheduleComposerDraftSave);
       searchInput.addEventListener("input", () => {
         searchTerm = searchInput.value;
         render();
@@ -857,10 +950,16 @@
       });
       $("#undo-button").addEventListener("click", undoDelete);
       $("#edit-pin").addEventListener("click", () => {
-        if (activeNoteId) togglePin(activeNoteId);
+        if (activeNoteId) {
+          flushEditorSave();
+          togglePin(activeNoteId);
+        }
       });
       $("#edit-archive").addEventListener("click", () => {
-        if (activeNoteId) toggleArchive(activeNoteId);
+        if (activeNoteId) {
+          flushEditorSave();
+          toggleArchive(activeNoteId);
+        }
       });
       $("#edit-delete").addEventListener("click", () => {
         if (activeNoteId) deleteNote(activeNoteId);
@@ -869,21 +968,15 @@
         event.preventDefault();
         const note = notes.find((item) => item.id === activeNoteId);
         if (!note) return;
-        const title = editTitle.value.trim();
-        const body = editBody.value.trim();
-        if (!title && !body) {
+        if (!editTitle.value.trim() && !editBody.value.trim()) {
           deleteNote(note.id);
           return;
         }
-        note.title = title;
-        note.body = body;
-        note.color = editorColor;
-        note.pinned = editorPinned;
-        note.updatedAt = Date.now();
-        saveNotes();
+        flushEditorSave(true);
         closeEditor();
         render();
       });
+      editor.addEventListener("input", scheduleEditorSave);
       dialogBackdrop.addEventListener("click", (event) => {
         if (event.target === dialogBackdrop) closeEditor();
       });
@@ -891,6 +984,16 @@
         if (event.key === "Escape" && dialogBackdrop.classList.contains("open")) closeEditor();
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "enter" && dialogBackdrop.classList.contains("open")) {
           editor.requestSubmit();
+        }
+      });
+      window.addEventListener("pagehide", () => {
+        saveComposerDraft();
+        flushEditorSave();
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") {
+          saveComposerDraft();
+          flushEditorSave();
         }
       });
       themeButton.addEventListener("click", () => {
@@ -910,6 +1013,11 @@
         console.error("无法读取主题设置：", error);
       }
       applyTheme(savedTheme);
+      const composerDraft = loadComposerDraft();
+      if (composerDraft) {
+        titleInput.value = composerDraft.title;
+        bodyInput.value = composerDraft.body;
+      }
       render();
     })();
   </script>
