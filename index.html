@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f8f9fa">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23fbbc04'/%3E%3Cpath d='M19 11h23l11 11v31H19a8 8 0 0 1-8-8V19a8 8 0 0 1 8-8Zm21 2v13h13M22 36h20M22 45h20' fill='none' stroke='%23242424' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" type="image/svg+xml">
   <title>拾记 · 把灵感留在身边</title>
   <style>
     :root {
@@ -222,6 +223,10 @@
     .note-card.drop-target { border-color: #4285f4; }
     .note-title { margin: 0 24px 8px 0; font-size: 16px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
     .note-body { margin: 0; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+    .note-body a { color: #1a73e8; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+    .note-body a:hover { color: #185abc; }
+    :root[data-theme="dark"] .note-body a { color: #8ab4f8; }
+    :root[data-theme="dark"] .note-body a:hover { color: #aecbfa; }
     .note-body:empty { display: none; }
     .note-date { margin-top: 13px; color: var(--muted); font-size: 11px; }
     .pin-indicator { position: absolute; top: 11px; right: 12px; color: var(--muted); }
@@ -635,6 +640,28 @@
         return button;
       }
 
+      function appendLinkedText(container, text) {
+        const urlPattern = /https?:\/\/[^\s]+|www\.[^\s]+/gi;
+        let cursor = 0;
+        let match;
+        while ((match = urlPattern.exec(text))) {
+          const rawUrl = match[0];
+          const url = rawUrl.replace(/[.,!?;:)}\]]+$/, "");
+          if (!url) continue;
+          if (match.index > cursor) container.append(document.createTextNode(text.slice(cursor, match.index)));
+          const link = document.createElement("a");
+          link.href = url.startsWith("www.") ? `https://${url}` : url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = url;
+          link.title = `打开网页：${url}`;
+          container.append(link);
+          if (url.length < rawUrl.length) container.append(document.createTextNode(rawUrl.slice(url.length)));
+          cursor = match.index + rawUrl.length;
+        }
+        if (cursor < text.length) container.append(document.createTextNode(text.slice(cursor)));
+      }
+
       function createCard(note, isArchived = false) {
         const card = document.createElement("article");
         card.className = "note-card";
@@ -658,7 +685,7 @@
         }
         const body = document.createElement("p");
         body.className = "note-body";
-        body.textContent = note.body;
+        appendLinkedText(body, note.body);
         card.append(body);
         const date = document.createElement("time");
         date.className = "note-date";
@@ -676,10 +703,10 @@
         actions.append(makeAction("删除", "trash", "delete-action", () => deleteNote(note.id)));
         card.append(actions);
         card.addEventListener("click", (event) => {
-          if (!event.target.closest("button")) openEditor(note.id);
+          if (!event.target.closest("button, a")) openEditor(note.id);
         });
         card.addEventListener("keydown", (event) => {
-          if ((event.key === "Enter" || event.key === " ") && !event.target.closest("button")) {
+          if ((event.key === "Enter" || event.key === " ") && !event.target.closest("button, a")) {
             event.preventDefault();
             openEditor(note.id);
           }
